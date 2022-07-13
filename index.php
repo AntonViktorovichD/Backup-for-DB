@@ -20,21 +20,27 @@ foreach ($tables as $key => $table) {
    $sql_arr[$table[0]]['status']['Auto_increment'] = $stat[0]['Auto_increment'];
    $sql_arr[$table[0]]['status']['Collation'] = $stat[0]['Collation'];
 
-  $cols = $dbh->query("SHOW FIELDS FROM " .  $table[0] .  "")->fetchAll();
+   $cols = $dbh->query("SHOW FIELDS FROM " . $table[0] . "")->fetchAll();
 
-  foreach ($cols as $key => $col) {
-     var_dump($col);
-     $sql_arr[$table[0]]['cols'][$key]['Field'] = $col['Field'];
-     $sql_arr[$table[0]]['cols'][$key]['Type'] = $col['Type'];
-     if ($col['Null'] == 'NO') {
-        $sql_arr[$table[0]]['cols'][$key]['Null'] = 'NOT NULL';
-     } else {
-        $sql_arr[$table[0]]['cols'][$key]['Null'] = 'DEFAULT NULL';
-     }
+   foreach ($cols as $key => $col) {
+      var_dump($col);
+      $sql_arr[$table[0]]['cols'][$key]['Field'] = $col['Field'];
+      $sql_arr[$table[0]]['cols'][$key]['Type'] = $col['Type'];
+      if ($col['Null'] == 'NO') {
+         $sql_arr[$table[0]]['cols'][$key]['Null'] = 'NOT NULL';
+      } else {
+         $sql_arr[$table[0]]['cols'][$key]['Null'] = 'DEFAULT NULL';
+      }
 
-     if ()
+      if (strlen($col['Key']) > 0) {
+         $sql_arr[$table[0]]['PK'] = "PRIMARY KEY (`" . $col['Field'] . "`)";
+      }
 
-  }
+      if (strlen($col['Extra']) > 0) {
+         $sql_arr[$table[0]]['cols'][$key]['Extra'] = "AUTO_INCREMENT";
+      }
+
+   }
 
 //
 //   $sql_arr[$table[0]]['cols']['Type'] = $cols[$key]['Type'];
@@ -42,4 +48,5 @@ foreach ($tables as $key => $table) {
 //   var_dump($dbh->query('SELECT * FROM ' . $table[0])->fetchAll());
 }
 
+//var_dump($sql_arr);
 var_dump($sql_arr['daily_reports']);
