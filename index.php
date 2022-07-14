@@ -69,33 +69,44 @@ foreach ($tables as $table) {
 
    $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll();
 
-   foreach ($values as $value) {
-      foreach ($value as $key => $val) {
-         if (is_numeric($key)) {
-            $table_val .= "'" . $val . "', ";
-         }
-         if ($key == 0) {
-            $table_val .= "( " . $table_val;
-         }
-         if ($key == (count($value) / 2) - 1) {
-            $table_val .= $table_val . "), ";
-         }
-      }
-
-   }
+//   foreach ($values as $value) {
+//      foreach ($value as $key => $val) {
+//         if (is_numeric($key)) {
+//            $table_val .= "'" . $val . "', ";
+//         }
+//         if ($key == 0) {
+//            $table_val .= "( " . $table_val;
+//         }
+//         if ($key == (count($value) / 2) - 1) {
+//            $table_val .= $table_val . "), ";
+//         }
+//      }
+//
+//   }
 
 
    $sql_table .= 'INSERT INTO `' . $table[0] . '` (' . $col_name . ') VALUES (';
 
-   echo '<pre>';
-   print_r($sql_table);
-   echo '</pre>';
-
+//   echo '<pre>';
+//   print_r($sql_table);
+//   echo '</pre>';
 
    $col_name = '';
 
    $table_val = '';
+
+   $filename = date("d_m_y") . '_' . $table[0];
+
+   $fd = fopen($filename . ".txt", 'w') or die("не удалось создать файл");
+   fwrite($fd, $sql_table);
+   fclose($fd);
+}
+
+foreach ($tables as $table) {
+
 }
 
 
-$filename = date("d_m_y") . '_' . $table[0];
+
+
+
