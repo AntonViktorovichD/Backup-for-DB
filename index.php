@@ -19,6 +19,8 @@ $col_name = '';
 
 $table_val = '';
 
+$vals_arr = [];
+
 foreach ($tables as $table) {
 
    $stat = $dbh->query("SHOW TABLE STATUS FROM `laravel` WHERE `name` LIKE '" . $table[0] . "' ")->fetchAll();
@@ -41,7 +43,7 @@ foreach ($tables as $table) {
 
       if ($col['Key'] == 'MUL') {
          $mul = 'COLLATE utf8mb4_unicode_ci';
-         $indx_key .= '`' . $col['Field'] . '` (`' . $col['Field'] . '`), ';
+         $indx_key .= 'KEY `' . $col['Field'] . '` (`' . $col['Field'] . '`), ';
       } else {
          $mul = '';
          $indx_key .= '';
@@ -53,7 +55,6 @@ foreach ($tables as $table) {
          $col_name .= '`' . $col['Field'] . '`';
       }
 
-
       $sql_table .= ('`' . $col['Field'] . '` ' . $col['Type'] . ' ' . $mul . ' ' . $null . $pri) . PHP_EOL;
    }
 
@@ -63,30 +64,42 @@ foreach ($tables as $table) {
       $collate = '';
    }
 
-   $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . '
-) ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+
+   if (strlen($indx_key) > 0) {
+      $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . ') ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+      $sql_table = str_replace(", ) ENGINE", " ) ENGINE", $sql_table);
+   } else {
+      $sql_table .= 'PRIMARY KEY (`id`) ) ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+   }
+
    $indx_key = '';
+   $value = '';
 
    $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll();
+   foreach ($values as $key => $vals) {
+      foreach ($vals as $k => $val) {
+         if (is_numeric($k)) {
+            if (strlen($val) == 0) {
+               $val = 'NULL';
+            }
+            $value .= $val;
+            $vals_arr[$key] = $value;
+         }
+      }
+      $value = '';
+   }
 
-//   foreach ($values as $value) {
-//      foreach ($value as $key => $val) {
-//         if (is_numeric($key)) {
-//            $table_val .= "'" . $val . "', ";
-//         }
-//         if ($key == 0) {
-//            $table_val .= "( " . $table_val;
-//         }
-//         if ($key == (count($value) / 2) - 1) {
-//            $table_val .= $table_val . "), ";
-//         }
+
+
+   foreach ($vals_arr as $val_arr) {
+      var_dump($val_arr);
+//      foreach ($val_arr as $val) {
+//         $value .= $val:
 //      }
-//
-//   }
+      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
+   }
 
-
-   $sql_table .= 'INSERT INTO `' . $table[0] . '` (' . $col_name . ') VALUES (';
-
+   $sql_table = str_replace("'NULL'", "NULL", $sql_table);
 //   echo '<pre>';
 //   print_r($sql_table);
 //   echo '</pre>';
@@ -97,13 +110,9 @@ foreach ($tables as $table) {
 
    $filename = date("d_m_y") . '_' . $table[0];
 
-   $fd = fopen($filename . ".txt", 'w') or die("не удалось создать файл");
+   $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
    fwrite($fd, $sql_table);
    fclose($fd);
-}
-
-foreach ($tables as $table) {
-
 }
 
 
