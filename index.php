@@ -74,16 +74,20 @@ foreach ($tables as $table) {
 
    $indx_key = '';
 
-   $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
+   $values = $dbh->query("SELECT * FROM " . $table[0] . " LIMIT 10")->fetchAll(PDO::FETCH_NUM);
+
    foreach ($values as $value) {
-      if(array_search(null, $value)) {
+      if (array_search(null, $value)) {
          $value[array_search(null, $value)] = NULL;
+      }
+      foreach ($value as $key => $str) {
+           $value[$key] = addslashes($str);
       }
 
       $val = str_replace("''", "NULL", implode("', '", $value));
       $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
-   }
 
+   }
    $sql_table = str_replace("NULL');", "NULL);", $sql_table);
    $sql_table = str_replace("'');", "NULL);", $sql_table);
    echo '<pre>';
