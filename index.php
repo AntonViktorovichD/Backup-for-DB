@@ -73,15 +73,19 @@ foreach ($tables as $table) {
    }
 
    $indx_key = '';
-   $value = '';
 
    $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
    foreach ($values as $value) {
-      $val = implode("', '", $value);
-      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES (" . $val . "); " . PHP_EOL;
+      if(array_search(null, $value)) {
+         $value[array_search(null, $value)] = NULL;
+      }
+
+      $val = str_replace("''", "NULL", implode("', '", $value));
+      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
    }
 
-   $sql_table = str_replace("'NULL'", "NULL", $sql_table);
+   $sql_table = str_replace("NULL');", "NULL);", $sql_table);
+   $sql_table = str_replace("'');", "NULL);", $sql_table);
    echo '<pre>';
    print_r($sql_table);
    echo '</pre>';
