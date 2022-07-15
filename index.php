@@ -75,34 +75,16 @@ foreach ($tables as $table) {
    $indx_key = '';
    $value = '';
 
-   $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll();
-   foreach ($values as $key => $vals) {
-      foreach ($vals as $k => $val) {
-         if (is_numeric($k)) {
-            if (strlen($val) == 0) {
-               $val = 'NULL';
-            }
-            $value .= $val;
-            $vals_arr[$key] = $value;
-         }
-      }
-      $value = '';
-   }
-
-
-
-   foreach ($vals_arr as $val_arr) {
-      var_dump($val_arr);
-//      foreach ($val_arr as $val) {
-//         $value .= $val:
-//      }
-      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
+   $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
+   foreach ($values as $value) {
+      $val = implode("', '", $value);
+      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES (" . $val . "); " . PHP_EOL;
    }
 
    $sql_table = str_replace("'NULL'", "NULL", $sql_table);
-//   echo '<pre>';
-//   print_r($sql_table);
-//   echo '</pre>';
+   echo '<pre>';
+   print_r($sql_table);
+   echo '</pre>';
 
    $col_name = '';
 
