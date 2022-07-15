@@ -74,14 +74,20 @@ foreach ($tables as $table) {
 
    $indx_key = '';
 
-   $values = $dbh->query("SELECT * FROM " . $table[0] . " LIMIT 10")->fetchAll(PDO::FETCH_NUM);
+   $cnt = count($dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM));
+
+   if ($cnt > 10) {
+      var_dump($cnt);
+   }
+
+   $values = $dbh->query("SELECT * FROM " . $table[0] . " LIMIT 10, 10")->fetchAll(PDO::FETCH_NUM);
 
    foreach ($values as $value) {
       if (array_search(null, $value)) {
          $value[array_search(null, $value)] = NULL;
       }
       foreach ($value as $key => $str) {
-           $value[$key] = addslashes($str);
+         $value[$key] = addslashes($str);
       }
 
       $val = str_replace("''", "NULL", implode("', '", $value));
