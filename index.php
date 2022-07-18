@@ -15,7 +15,7 @@ $sql_table = '';
 
 $indx_key = '';
 
-$primary_key = '';
+$prim_key = '';
 
 $col_name = '';
 
@@ -33,8 +33,19 @@ foreach ($tables as $k => $table) {
       $sql_table = 'CREATE TABLE IF NOT EXISTS `' . $table[0] . '` (' . PHP_EOL;
 
       for ($i = 0; $i < count($indxs); $i++) {
-         if (strlen($indxs[$i]['Key_name'])) {
-            var_dump($indxs[$i]);
+         if ($indxs[$i]['Key_name'] == 'PRIMARY') {
+            $prim_key .= '`'. $indxs[$i]['Column_name'] . '`, ';
+         } else {
+            $prim_key .= '';
+         }
+
+         if ($indxs[$i]['Key_name'] != 'PRIMARY' && strlen($indxs[$i]['Key_name']) > 0) {
+            if ($indxs[$i - 1]['Key_name'] != $indxs[$i]['Key_name']) {
+               $indx_key .= $indxs[$i]['Key_name'] . ', ';
+               var_dump($indxs[$i]['Key_name']);
+            }
+         } else {
+            $indx_key .= '';
          }
       }
 
@@ -46,21 +57,13 @@ foreach ($tables as $k => $table) {
             $null = 'DEFAULT NULL';
          }
 
-         if ($col['Key'] == 'MUL') {
-            $mul = 'COLLATE utf8mb4_unicode_ci';
-            $indx_key .= 'KEY `' . $col['Field'] . '` (`' . $col['Field'] . '`), ';
-         } else {
-            $mul = '';
-            $indx_key .= '';
-         }
-
          if ($key < count($cols) - 1) {
             $col_name .= '`' . $col['Field'] . '`, ';
          } else {
             $col_name .= '`' . $col['Field'] . '`';
          }
 
-         $sql_table .= ('`' . $col['Field'] . '` ' . $col['Type'] . ' ' . $mul . ' ' . $null) . PHP_EOL;
+         $sql_table .= ('`' . $col['Field'] . '` ' . $col['Type'] . ' ' . $null) . PHP_EOL;
       }
 
       if (strripos($sql_table, 'COLLATE') > 0) {
@@ -69,17 +72,26 @@ foreach ($tables as $k => $table) {
          $collate = '';
       }
 
-      if (strlen($indx_key) > 0) {
-         $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . ') ENGINE=' . $stat['Engine'] . ' AUTO_INCREMENT=' . $stat['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
-         $sql_table = str_replace(", ) ENGINE", " ) ENGINE", $sql_table);
-      } else {
-         $sql_table .= 'PRIMARY KEY (`id`) ) ENGINE=' . $stat['Engine'] . ' AUTO_INCREMENT=' . $stat['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+      if (strlen($prim_key) > 0) {
+         $sql_table .= 'PRIMARY KEY (' . $prim_key . '), ';
+         $sql_table = str_replace(", )", ")", $sql_table);
       }
 
-//      echo '<pre>';
-//      print_r($sql_table);
-//      echo '</pre>';
+      if (strlen($indx_key) > 0) {
+         $sql_table .= 'KEY ' . $indx_key . ') ENGINE=' . $stat['Engine'] . ' AUTO_INCREMENT=' . $stat['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
 
+      }
+
+//      if () {
+//         $sql_table .= 'PRIMARY KEY ' . $prim_key . ') ENGINE=' . $stat['Engine'] . ' AUTO_INCREMENT=' . $stat['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+//      }
+
+      echo '<pre>';
+      print_r($sql_table);
+      echo '</pre>';
+
+      $prim_key = '';
+      $indx_key = '';
       unset($tables[$k]);
    }
 }
