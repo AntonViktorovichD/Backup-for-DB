@@ -28,88 +28,93 @@ foreach ($tables as $table) {
    if ($cnt > 10) {
 
       $indx_keys = ceil($cnt / 10);
-
       for ($i = 0; $i < $indx_keys; $i++) {
-
          $values = $dbh->query("SELECT * FROM " . $table[0] . " LIMIT " . $i . "0, 10")->fetchAll(PDO::FETCH_NUM);
+         limiter($dbh, $table, $values, $indx_key, $col_name, $i);
 
-         $stat = $dbh->query("SHOW TABLE STATUS FROM `laravel` WHERE `name` LIKE '" . $table[0] . "' ")->fetchAll();
-         $cols = $dbh->query("SHOW FIELDS FROM " . $table[0] . "")->fetchAll();
-         $sql_table = 'CREATE TABLE IF NOT EXISTS `' . $table[0] . '` (' . PHP_EOL;
+      }
+   } elseif ($cnt < 10) {
+      $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
+      limiter($dbh, $table, $values, $indx_key, $col_name, 0);
+   }
+}
 
-         foreach ($cols as $key => $col) {
+function limiter($dbh, $table, $values, $indx_key, $col_name, $i) {
 
-            if ($col['Null'] == 'NO') {
-               $null = 'NOT NULL ';
-            } else {
-               $null = 'DEFAULT NULL';
-            }
+   $stat = $dbh->query("SHOW TABLE STATUS FROM `laravel` WHERE `name` LIKE '" . $table[0] . "' ")->fetchAll();
+   $cols = $dbh->query("SHOW FIELDS FROM " . $table[0] . "")->fetchAll();
+   $sql_table = 'CREATE TABLE IF NOT EXISTS `' . $table[0] . '` (' . PHP_EOL;
 
-            if ($col['Key'] == 'PRI') {
-               $pri = 'AUTO_INCREMENT,';
-            } else {
-               $pri = ',';
-            }
+   foreach ($cols as $key => $col) {
 
-            if ($col['Key'] == 'MUL') {
-               $mul = 'COLLATE utf8mb4_unicode_ci';
-               $indx_key .= 'KEY `' . $col['Field'] . '` (`' . $col['Field'] . '`), ';
-            } else {
-               $mul = '';
-               $indx_key .= '';
-            }
+      if ($col['Null'] == 'NO') {
+         $null = 'NOT NULL ';
+      } else {
+         $null = 'DEFAULT NULL';
+      }
 
-            if ($key < count($cols) - 1) {
-               $col_name .= '`' . $col['Field'] . '`, ';
-            } else {
-               $col_name .= '`' . $col['Field'] . '`';
-            }
+      if ($col['Key'] == 'PRI') {
+         $pri = 'AUTO_INCREMENT,';
+      } else {
+         $pri = ',';
+      }
 
-            $sql_table .= ('`' . $col['Field'] . '` ' . $col['Type'] . ' ' . $mul . ' ' . $null . $pri) . PHP_EOL;
-         }
+      if ($col['Key'] == 'MUL') {
+         $mul = 'COLLATE utf8mb4_unicode_ci';
+         $indx_key .= 'KEY `' . $col['Field'] . '` (`' . $col['Field'] . '`), ';
+      } else {
+         $mul = '';
+         $indx_key .= '';
+      }
 
-         if (strripos($sql_table, 'COLLATE') > 0) {
-            $collate = 'COLLATE utf8mb4_unicode_ci';
-         } else {
-            $collate = '';
-         }
+      if ($key < count($cols) - 1) {
+         $col_name .= '`' . $col['Field'] . '`, ';
+      } else {
+         $col_name .= '`' . $col['Field'] . '`';
+      }
 
-         if (strlen($indx_key) > 0) {
-            $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . ') ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
-            $sql_table = str_replace(", ) ENGINE", " ) ENGINE", $sql_table);
-         } else {
-            $sql_table .= 'PRIMARY KEY (`id`) ) ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
-         }
+      $sql_table .= ('`' . $col['Field'] . '` ' . $col['Type'] . ' ' . $mul . ' ' . $null . $pri) . PHP_EOL;
+   }
 
-         $indx_key = '';
+   if (strripos($sql_table, 'COLLATE') > 0) {
+      $collate = 'COLLATE utf8mb4_unicode_ci';
+   } else {
+      $collate = '';
+   }
 
-         foreach ($values as $value) {
-            if (array_search(null, $value)) {
-               $value[array_search(null, $value)] = NULL;
-            }
-            foreach ($value as $key => $str) {
-               $value[$key] = addslashes($str);
-            }
+   if (strlen($indx_key) > 0) {
+      $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . ') ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+      $sql_table = str_replace(", ) ENGINE", " ) ENGINE", $sql_table);
+   } else {
+      $sql_table .= 'PRIMARY KEY (`id`) ) ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
+   }
 
-            $val = str_replace("''", "NULL", implode("', '", $value));
-            $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
+   $indx_key = '';
 
-         }
-         $sql_table = str_replace("NULL');", "NULL);", $sql_table);
-         $sql_table = str_replace("'');", "NULL);", $sql_table);
+   foreach ($values as $value) {
+      if (array_search(null, $value)) {
+         $value[array_search(null, $value)] = NULL;
+      }
+      foreach ($value as $key => $str) {
+         $value[$key] = addslashes($str);
+      }
+
+      $val = str_replace("''", "NULL", implode("', '", $value));
+      $sql_table .= "INSERT INTO `" . $table[0] . "` (" . $col_name . ") VALUES ('" . $val . "'); " . PHP_EOL;
+
+   }
+   $sql_table = str_replace("NULL');", "NULL);", $sql_table);
+   $sql_table = str_replace("'');", "NULL);", $sql_table);
    echo '<pre>';
    print_r($sql_table);
    echo '</pre>';
 
-         $col_name = '';
+   $col_name = '';
 
-         $table_val = '';
+   $table_val = '';
 
-         $filename = date("d_m_y") . '_' . $table[0];
-
-//   $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
-//   fwrite($fd, $sql_table);
-//   fclose($fd);
-      }
-   }
+   $filename = date("d_m_y") . '_' . $table[0] . '_part' . $i;
+   $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
+   fwrite($fd, $sql_table);
+   fclose($fd);
 }
