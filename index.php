@@ -8,6 +8,7 @@ try {
    $data = $dbh->query("SELECT * FROM tables")->fetchAll();
 } catch (Exception $e) {
    echo 'Выброшено исключение: ', $e->getMessage(), "\n";
+   $err = 'Ошибка соединения с БД';
 }
 
 date_default_timezone_set('Europe/Moscow');
