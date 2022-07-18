@@ -17,7 +17,19 @@ $indx_key = '';
 
 $col_name = '';
 
+$table_val = '';
+
+$vals_arr = [];
+
 foreach ($tables as $table) {
+
+   $cnt = $dbh->query("SELECT COUNT(*) FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM)[0];
+
+   $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
+
+//    $values = $dbh->query(sprintf("SELECT * FROM %s", $table[0]))->fetchAll(PDO::FETCH_NUM);
+
+   var_dump($cnt);
 
    $stat = $dbh->query("SHOW TABLE STATUS FROM `laravel` WHERE `name` LIKE '" . $table[0] . "' ")->fetchAll();
    $cols = $dbh->query("SHOW FIELDS FROM " . $table[0] . "")->fetchAll();
@@ -60,6 +72,7 @@ foreach ($tables as $table) {
       $collate = '';
    }
 
+
    if (strlen($indx_key) > 0) {
       $sql_table .= 'PRIMARY KEY (`id`), ' . $indx_key . ') ENGINE=' . $stat[0]['Engine'] . ' AUTO_INCREMENT=' . $stat[0]['Auto_increment'] . ' DEFAULT CHARSET=utf8mb4 ' . $collate . ';' . PHP_EOL;
       $sql_table = str_replace(", ) ENGINE", " ) ENGINE", $sql_table);
@@ -69,31 +82,6 @@ foreach ($tables as $table) {
 
    $indx_key = '';
 
-   $cnt = count($dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM));
-   $limit = 0;
-
-   if ($cnt > 10) {
-      $limit = floor($cnt / 10);
-   }
-
-   if ($limit > 0) {
-      for ($i = 0; $i < $limit; $i++) {
-
-         $values = $dbh->query("SELECT * FROM " . $table[0] . " LIMIT " . $i . 0 . ", 10")->fetchAll(PDO::FETCH_NUM);
-
-         $filename = date("d_m_y") . '_' . $table[0] . '_part' . ($i + 1);
-
-         insert_values($values, $filename, $table, $col_name, $sql_table);
-      }
-
-   } else {
-      $values = $dbh->query("SELECT * FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM);
-      $filename = date("d_m_y") . '_' . $table[0];
-      insert_values($values, $filename, $table, $col_name, $sql_table);
-   }
-}
-
-function insert_values($values, $filename, $table, $col_name, $sql_table) {
    foreach ($values as $value) {
       if (array_search(null, $value)) {
          $value[array_search(null, $value)] = NULL;
@@ -108,18 +96,17 @@ function insert_values($values, $filename, $table, $col_name, $sql_table) {
    }
    $sql_table = str_replace("NULL');", "NULL);", $sql_table);
    $sql_table = str_replace("'');", "NULL);", $sql_table);
-
    echo '<pre>';
    print_r($sql_table);
    echo '</pre>';
 
    $col_name = '';
 
-   $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
-   fwrite($fd, $sql_table);
-   fclose($fd);
+   $table_val = '';
+
+   $filename = date("d_m_y") . '_' . $table[0];
+
+//   $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
+//   fwrite($fd, $sql_table);
+//   fclose($fd);
 }
-
-
-
-
