@@ -42,7 +42,7 @@ foreach ($tables as $k => $table) {
          if ($indxs[$i]['Key_name'] != 'PRIMARY' && strlen($indxs[$i]['Key_name']) > 0) {
             if ($indxs[$i - 1]['Key_name'] != $indxs[$i]['Key_name']) {
                $indx_key .= '`' . $indxs[$i]['Key_name'] . '` (`' . $indxs[$i]['Column_name'] . '`, ';
-               var_dump($indxs[$i]['Key_name']);
+//               var_dump($indxs[$i]['Key_name']);
             } else {
                $indx_key .= '`' . $indxs[$i]['Column_name'] . '`, ';
             }
@@ -108,9 +108,9 @@ foreach ($tables as $k => $table) {
       $table_val = '';
       unset($tables[$k]);
 
-      echo '<pre>';
-      print_r($sql_table);
-      echo '</pre>';
+//      echo '<pre>';
+//      print_r($sql_table);
+//      echo '</pre>';
 
       $filename = date("d_m_y") . '_' . $table[0];
       $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
@@ -214,4 +214,42 @@ function limiter($dbh, $table, $values, $indx_key, $col_name, $i) {
    $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
    fwrite($fd, $sql_table);
    fclose($fd);
+}
+
+$root = $_SERVER['DOCUMENT_ROOT'];
+$files = scandir($root);
+$zip = new ZipArchive();
+
+$zip_name = date("d_m_y") . '_backup.zip';
+
+if (!file_exists($zip_name)) {
+   $zip->open($zip_name, ZipArchive::CREATE);
+   foreach ($files as $file) {
+      if (stristr($file, date("d_m_y"))) {
+         $zip->addFile($file);
+      }
+   }
+   $zip->close();
+}
+
+$zips = [];
+
+foreach ($files as $file) {
+   if (stristr($file, date("d_m_y")) && stristr($file, "sql")) {
+      unlink($file);
+   }
+   if (stristr($file, "zip") && count($files) > 10) {
+      $zips[] = filectime($file);
+   }
+}
+
+sort($zips, SORT_NUMERIC);
+if (stristr($file, "zip") && count($files) > 10) {
+   for ($i = 9; $i < count($zips); $i++) {
+      foreach ($files as $file) {
+         if (filectime($file) == $zips[$i]) {
+            unlink($file);
+         }
+      }
+   }
 }
