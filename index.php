@@ -5,7 +5,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 try {
    $dbh = new PDO('mysql:host=localhost; dbname=laravel; charset=utf8mb4', 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-   $data = $dbh->query("SELECT * FROM tables")->fetchAll();
 } catch (Exception $e) {
    echo 'Выброшено исключение: ', $e->getMessage(), "\n";
    $err = 'Ошибка соединения с БД';
