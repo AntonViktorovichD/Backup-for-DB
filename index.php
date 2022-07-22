@@ -124,7 +124,11 @@ try {
       }
    }
 
-   foreach ($tables as $table) {
+   foreach ($tables as $k => $table) {
+
+      if ($k % 50 == 0) {
+         sleep(1);
+      }
 
       $cnt = $dbh->query("SELECT COUNT(*) FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM)[0][0];
 
@@ -213,9 +217,6 @@ function limiter($dbh, $table, $values, $indx_key, $col_name, $i) {
    }
    $sql_table = str_replace("NULL');", "NULL);", $sql_table);
    $sql_table = str_replace("'');", "NULL);", $sql_table);
-//   echo '<pre>';
-//   print_r($sql_table);
-//   echo '</pre>';
 
    $col_name = '';
 
@@ -225,6 +226,7 @@ function limiter($dbh, $table, $values, $indx_key, $col_name, $i) {
    $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
    fwrite($fd, $sql_table);
    fclose($fd);
+   clearstatcache();
 }
 
 
