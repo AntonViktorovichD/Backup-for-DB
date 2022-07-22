@@ -126,10 +126,6 @@ try {
 
    foreach ($tables as $k => $table) {
 
-      if ($k % 50 == 0) {
-         sleep(1);
-      }
-
       $cnt = $dbh->query("SELECT COUNT(*) FROM " . $table[0] . "")->fetchAll(PDO::FETCH_NUM)[0][0];
 
       if ($cnt > 1000) {
