@@ -113,10 +113,6 @@ try {
          $table_val = '';
          unset($tables[$k]);
 
-//      echo '<pre>';
-//      print_r($sql_table);
-//      echo '</pre>';
-
          $filename = date("d_m_y") . '_' . $table[0];
          $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
          fwrite($fd, $sql_table);
@@ -222,7 +218,7 @@ function limiter($dbh, $table, $values, $indx_key, $col_name, $i) {
    $fd = fopen($filename . ".sql", 'w') or die("не удалось создать файл");
    fwrite($fd, $sql_table);
    fclose($fd);
-   clearstatcache();
+   $sql_table = '';
 }
 
 
@@ -268,7 +264,7 @@ if (stristr($file, "zip") && count($files) > 10) {
       }
    }
 }
-
+clearstatcache();
 function send_mail($e, $err) {
 
    require_once "vendor/autoload.php";
